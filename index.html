@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>山东酒桌模拟器</title>
+    <title>山东酒桌礼仪模拟器</title>
     <style>
         body {
             font-family: '微软雅黑', sans-serif;
@@ -21,11 +21,12 @@
             margin-bottom: 20px;
             text-align: center;
         }
-        input {
+        select {
             padding: 10px;
             width: 220px;
-            margin-right: 10px;
+            margin: 0 10px;
             border: 1px solid #8b0000;
+            background: white;
         }
         button {
             padding: 10px 20px;
@@ -35,6 +36,7 @@
             border-radius: 20px;
             cursor: pointer;
             transition: 0.3s;
+            margin-top: 15px;
         }
         button:hover {
             background-color: #6a0000;
@@ -63,10 +65,27 @@
             border-radius: 8px;
             text-align: center;
             transform: translate(-50%, -50%);
+            font-size: 14px;
         }
         .highlight {
             background: #ffe08a;
             z-index: 2;
+        }
+        .toast-list {
+            background: #fff8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .dining-etiquette {
+            border-top: 2px dashed #8b0000;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        .course-order {
+            color: #8b0000;
+            font-weight: bold;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -74,15 +93,30 @@
     <div class="container">
         <h2 style="text-align: center; color: #8b0000;">山东酒桌礼仪模拟器 🍶</h2>
         <div class="input-section">
-            <input type="text" id="roleInput" placeholder="输入身份（如：女性宾客）">
-            <button onclick="showGuidance()">获取指导</button>
+            <select id="roleSelect">
+                <option value="">--请选择身份--</option>
+                <option value="主陪">主陪</option>
+                <option value="副陪">副陪</option>
+                <option value="主宾">主宾</option>
+                <option value="副宾">副宾</option>
+                <option value="女性宾客">女性宾客</option>
+                <option value="小孩">小孩</option>
+                <option value="其他宾客">其他宾客</option>
+            </select>
+            <select id="scenarioSelect">
+                <option value="通用">--选择场景--</option>
+                <option value="生日宴">生日宴</option>
+                <option value="商务宴请">商务宴请</option>
+                <option value="家庭聚餐">家庭聚餐</option>
+                <option value="同学聚会">同学聚会</option>
+            </select>
+            <button onclick="showGuidance()">获取礼仪指导</button>
         </div>
         <div id="resultArea" class="result" style="display: none;"></div>
     </div>
 
     <script>
         const roles = {
-            // 原有角色
             '主陪': {
                 seat: {pos: [50, 10], angle: 0},
                 steps: ['第一杯酒分6次喝完','前三杯带领敬酒','控制全场节奏'],
@@ -103,7 +137,6 @@
                 steps: ['配合主宾行动','主动向主陪敬酒','协助照顾其他宾客'],
                 rules: '坐主陪左侧，第二尊贵客人'
             },
-            // 新增角色
             '女性宾客': {
                 seat: {pos: [60, 40], angle: 30},
                 steps: ['可选择性举杯','接受敬酒可抿酒','优先安排热饮'],
@@ -121,6 +154,64 @@
             }
         };
 
+        const scenarios = {
+            '生日宴': {
+                toasts: [
+                    "福如东海长流水，寿比南山不老松！",
+                    "年年有今日，岁岁有今朝！",
+                    "生日鸿运照，好事连连到！"
+                ],
+                etiquette: "寿星先动筷，鱼头朝向寿星"
+            },
+            '商务宴请': {
+                toasts: [
+                    "感谢领导栽培，我敬您一杯！",
+                    "祝公司蒸蒸日上，业绩长虹！",
+                    "合作愉快，共赢未来！"
+                ],
+                etiquette: "领导先动筷，鸡头不对客"
+            },
+            '家庭聚餐': {
+                toasts: [
+                    "家和万事兴，幸福永相随！",
+                    "祝长辈福寿安康，晚辈学业有成！",
+                    "团团圆圆，幸福美满！"
+                ],
+                etiquette: "长辈先动筷，整鱼不翻身"
+            },
+            '同学聚会': {
+                toasts: [
+                    "青春不老，友谊长存！",
+                    "忆往昔同窗数载，看今朝欢聚一堂！",
+                    "感情深一口闷，同学情最纯真！"
+                ],
+                etiquette: "发起人先动筷，随意不拘谨"
+            },
+            '通用': {
+                toasts: [
+                    "酒逢知己千杯少，话不投机大口喝！",
+                    "感情浅舔一舔，感情深一口闷！",
+                    "美酒倒进白瓷杯，酒到面前你莫推"
+                ],
+                etiquette: "主宾先动筷，顺时针方向"
+            }
+        };
+
+        const diningRules = {
+            servingOrder: [
+                "凉菜先上，酒过三巡后方上热菜",
+                "整鸡上菜要鸡头朝主陪",
+                "鱼头朝主宾（商务场合朝领导）",
+                "汤品最后上（山东部分地区先上汤）"
+            ],
+            chopstickRules: [
+                "鸡：主陪动第一筷（商务场合领导先动）",
+                "鱼：主宾先动鱼头（鱼头三杯酒仪式）",
+                "整鱼不可翻身（用筷子剔除鱼骨）",
+                "最后上菜不可说'完了'，要说'齐了'"
+            ]
+        };
+
         function createSeat(role, currentRole) {
             const seat = document.createElement('div');
             seat.className = `seat ${role === currentRole ? 'highlight' : ''}`;
@@ -131,25 +222,44 @@
         }
 
         function showGuidance() {
-            const role = document.getElementById('roleInput').value.trim();
+            const role = document.getElementById('roleSelect').value;
+            const scenario = document.getElementById('scenarioSelect').value;
             const resultArea = document.getElementById('resultArea');
             
-            if (roles[role]) {
+            if (role && roles[role]) {
                 const table = document.createElement('div');
                 table.className = 'round-table';
-                
-                // 创建所有座位
                 Object.keys(roles).forEach(r => {
                     table.appendChild(createSeat(r, role));
                 });
 
-                const guidance = `
-                    <h3>${role}礼仪指导</h3>
+                const toastContent = `
+                    <div class="toast-list">
+                        <h4>🎉 场景祝酒词（${scenario}）：</h4>
+                        <ul>${scenarios[scenario].toasts.map(t => `<li>"${t}"</li>`).join('')}</ul>
+                        <p>📌 敬酒礼仪：${scenarios[scenario].etiquette}</p>
+                    </div>
+                `;
+
+                const diningContent = `
+                    <div class="dining-etiquette">
+                        <h4>🥢 用餐流程规范：</h4>
+                        <div class="course-order">上菜顺序：</div>
+                        <ul>${diningRules.servingOrder.map(r => `<li>${r}</li>`).join('')}</ul>
+                        <div class="course-order">动筷顺序：</div>
+                        <ul>${diningRules.chopstickRules.map(r => `<li>${r}</li>`).join('')}</ul>
+                        <p style="color:#666">注：鱼头酒仪式需喝三杯（鱼头、鱼尾、鱼鳍各一杯）</p>
+                    </div>
+                `;
+
+                let html = `
+                    <h3>${role}礼仪指导（${scenario}）</h3>
                     <div>${table.outerHTML}</div>
-                    <h4>🍶 核心流程：</h4>
-                    <ul>${roles[role].steps.map(s => `<li>${s}</li>`).join('')}</ul>
-                    <h4>📌 重要规则：</h4>
+                    ${toastContent}
+                    <h4>📜 角色规范：</h4>
+                    <ul>${roles[role].steps.map(step => `<li>${step}</li>`).join('')}</ul>
                     <p>${roles[role].rules}</p>
+                    ${diningContent}
                     <div style="color:#666; margin-top:15px;">
                         <small>※ 圆桌布局说明：</small><br>
                         <small>1. 主陪正对门中心位置</small><br>
@@ -158,10 +268,10 @@
                     </div>
                 `;
                 
-                resultArea.innerHTML = guidance;
+                resultArea.innerHTML = html;
                 resultArea.style.display = 'block';
             } else {
-                resultArea.innerHTML = '⚠️ 有效身份：主陪/副陪/主宾/副宾/女性宾客/小孩/其他宾客';
+                resultArea.innerHTML = '⚠️ 请先选择有效身份';
                 resultArea.style.display = 'block';
             }
         }
